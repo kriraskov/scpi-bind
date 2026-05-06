@@ -9,7 +9,7 @@ logger = logging.getLogger(__name__)
 class VISAInterface(Protocol):
     """Protocol for VISA interfaces."""
     def write(self, message: str) -> None:
-        """Wrrite a message to the resource.
+        """Write a message to the resource.
         
         Args:
             message (str): Message to write to the resource.
