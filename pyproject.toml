@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools >= 77.0.3"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "scpibind"
+version = "0.1.0"
+authors = [
+    { name="Kristoffer Raskov", email="kristoffer.raskov@gmail.com" },
+]
+description = "SCPI instrument abstraction with property binding built around PyVISA."
+license = "MIT"
+license-files = ["LICEN[CS]E*"]
+
+[project.urls]
+Homepage = "https://github.com/kriraskov/scpi-bind
