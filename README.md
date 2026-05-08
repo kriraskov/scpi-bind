@@ -25,10 +25,12 @@ class PowerSupply(Instrument):
 psu = PowerSupply("TCPIP0::192.168.0.10::INSTR")
 print(psu.identity)
 
-psu.setup(voltage=5)
+# Set up multiple properties at the same time
+psu.setup(voltage=5, current=0.1)
 print(psu.voltage)
 
-psu.current = 0.1
+# Set up individual properties
+psu.current = 0.05
 print(psu.current)
 ```
 
