@@ -61,7 +61,9 @@ class SCPIProperty:
         """
         if instance is None:
             return self
+
         get_cmd = self.get_cmd.format(**vars(instance))
+
         return self.typecast(instance.query(get_cmd))
     
     def __set__(self, instance: VISAInterface, value: Any) -> None:
@@ -80,12 +82,8 @@ class Instrument:
     identity = SCPIProperty("*IDN?")
     complete = SCPIProperty("*OPC?")
 
-    def __init__(
-            self,
-            resource_name: str,
-            label: str | None = None,
-            **kwargs
-        ) -> None:
+    def __init__(self, resource_name: str, label: str | None = None,
+                 **kwargs) -> None:
         """Initialize the instrument interface.
 
         Args:
@@ -103,16 +101,26 @@ class Instrument:
                 instrument.
         """
         self.label = label or self.__class__.__name__
+
         try:
             self._rm = pyvisa.ResourceManager()
-            logger.debug(f"[{self.label}] Opened resource manager: {self._rm}")
+            logger.debug(
+                f"[{self.label}] Opened resource manager: {self._rm}"
+            )
         except Exception as e:
-            logger.error(f"[{self.label}] Failed to open resource manager: {e}")
+            logger.error(
+                f"[{self.label}] Failed to open resource manager: {e}"
+            )
+
         try:
             self._resource = self._rm.open_resource(resource_name, **kwargs)
-            logger.debug(f"[{self.label}] Opened resource: {self._resource}")
+            logger.debug(
+                f"[{self.label}] Opened resource: {self._resource}"
+            )
         except Exception as e:
-            logger.error(f"[{self.label}] Failed to open resource: {e}")
+            logger.error(
+                f"[{self.label}] Failed to open resource: {e}"
+            )
 
     def __getattr__(self, name: str) -> Any:
         """Delegate attribute access to the underlying resource.
@@ -152,18 +160,16 @@ class Instrument:
                 )
 
             return result
+
         return wrapper
     
     def __enter__(self) -> Self:
         """Enter the runtime context related to this object."""
         return self
 
-    def __exit__(
-            self, 
-            exc_type: type[BaseException] | None, 
-            exc_value: BaseException | None,
-            traceback: object | None
-        ) -> None:
+    def __exit__(self, exc_type: type[BaseException] | None,
+                 exc_value: BaseException | None,
+                 traceback: object | None) -> None:
         """Exit the runtime context related to this object."""
         self.close()
 
@@ -183,6 +189,7 @@ class Instrument:
             logger.error(
                 f"[{self.label}] Error closing resource: {e}"
             )
+
         try:
             logger.debug(
                 f"[{self.label}] Closing resource manager: {self._rm}"
@@ -198,8 +205,10 @@ class Instrument:
             if hasattr(self, key):
                 setattr(self, key, value)
             else:
-                raise AttributeError(f"{key} is not a valid attribute of "
-                                     f"{self.__class__.__name__}")
+                raise AttributeError(
+                    f"{key} is not a valid attribute of "
+                    f"{self.__class__.__name__}"
+                )
 
     def reset(self):
         self.write("*RST")
@@ -242,4 +251,11 @@ class SubSystem:
         return getattr(self.instrument, name)
 
     def setup(self, **kwargs) -> None:
-        [setattr(self, key, value) for key, value in kwargs.items()]
+        for key, value in kwargs.items():
+            if hasattr(self, key):
+                setattr(self, key, value)
+            else:
+                raise AttributeError(
+                    f"{key} is not a valid attribute of "
+                    f"{self.__class__.__name__}"
+                )

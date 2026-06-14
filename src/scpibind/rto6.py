@@ -1,21 +1,17 @@
+from src.scpibind.instrument import *
 import numpy as np
-from src.scpibind.instrument import Instrument, SubSystem, SCPIProperty
 
 
 class RTO6(Instrument):
-    def __init__(
-        self,
-        resource_name: str,
-        name: str = "RTO6",
-        **kwargs
-    ) -> None:
+    format = SCPIProperty("FORM?")
+    update_display = SCPIProperty("SYST:DISP:UPD?")
+
+    def __init__(self, resource_name: str, name: str = "RTO6",
+                 **kwargs) -> None:
         super().__init__(resource_name, name, **kwargs)
         self.channel = [Channel(self, i + 1) for i in range(4)]
         self.math = [Math(self, i + 1) for i in range(8)]
         self.fft = [FFT(self, i + 1) for i in range(8)]
-
-    format = SCPIProperty("FORM?")
-    update_display = SCPIProperty("SYST:DISP:UPD?")
 
     def single(self):
         self.write("RUNS")
@@ -39,11 +35,8 @@ class Math(SubSystem):
         super().setup(status='ON', **kwargs)
 
     def get_data(self):
-        return self.query_binary_values(
-            f"CALC:MATH{self.suffix}:DATA?",
-            datatype="f",
-            container=np.array
-        )
+        return self.query_binary_values(f"CALC:MATH{self.suffix}:DATA?",
+                                        datatype="f", container=np.array)
 
 
 class FFT(SubSystem):
