@@ -100,27 +100,43 @@ class Instrument:
             :class:`pyvisa.Resource`: For interacting with the
                 instrument.
         """
+        self.resource_name = resource_name
         self.label = label or self.__class__.__name__
+        self.kwargs = kwargs
+        self._resource_manager = None
+        self._resource = None
 
-        try:
-            self._rm = pyvisa.ResourceManager()
-            logger.debug(
-                f"[{self.label}] Opened resource manager: {self._rm}"
-            )
-        except Exception as e:
-            logger.error(
-                f"[{self.label}] Failed to open resource manager: {e}"
-            )
+    @property
+    def resource_manager(self):
+        if self._resource_manager is None:
+            try:
+                self._resource_manager = pyvisa.ResourceManager()
+                logger.debug(
+                    f"[{self.label}] Opened resource manager: "
+                    f"{self._resource_manager}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"[{self.label}] Failed to open resource manager: {e}"
+                )
+        return self._resource_manager
 
-        try:
-            self._resource = self._rm.open_resource(resource_name, **kwargs)
-            logger.debug(
-                f"[{self.label}] Opened resource: {self._resource}"
-            )
-        except Exception as e:
-            logger.error(
-                f"[{self.label}] Failed to open resource: {e}"
-            )
+    @property
+    def resource(self):
+        if self._resource is None:
+            try:
+                self._resource = self.resource_manager.open_resource(
+                    self.resource_name,
+                    **self.kwargs
+                )
+                logger.debug(
+                    f"[{self.label}] Opened resource: {self._resource}"
+                )
+            except Exception as e:
+                logger.error(
+                    f"[{self.label}] Failed to open resource: {e}"
+                )
+        return self._resource
 
     def __getattr__(self, name: str) -> Any:
         """Delegate attribute access to the underlying resource.
@@ -137,7 +153,7 @@ class Instrument:
             Any: The attribute value or a callable wrapper if the
                 attribute is a method.
         """
-        attr = getattr(self._resource, name)
+        attr = getattr(self.resource, name)
 
         if not callable(attr):
             return attr
@@ -182,9 +198,9 @@ class Instrument:
         """
         try:
             logger.debug(
-                f"[{self.label}] Closing resource: {self._resource}"
+                f"[{self.label}] Closing resource: {self.resource}"
             )
-            self._resource.close()
+            self.resource.close()
         except Exception as e:
             logger.error(
                 f"[{self.label}] Error closing resource: {e}"
@@ -192,9 +208,9 @@ class Instrument:
 
         try:
             logger.debug(
-                f"[{self.label}] Closing resource manager: {self._rm}"
+                f"[{self.label}] Closing resource manager: {self.resource_manager}"
             )
-            self._rm.close()
+            self.resource_manager.close()
         except Exception as e:
             logger.error(
                 f"[{self.label}] Error closing resource manager: {e}"
